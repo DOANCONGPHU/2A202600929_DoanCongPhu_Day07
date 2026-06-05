@@ -62,13 +62,13 @@ Số chunk = [(10,000−100)/400]=24.75
 
 | # | Tên tài liệu | Nguồn | Số ký tự | Metadata đã gán |
 |---|--------------|-------|----------|-----------------|
-| 1 | baomatcanhan.md | https://vinfastauto.com/vn_vi/dieu-khoan-phap-ly | 34,505 | category=privacy, chunk_strategy=by_section |
-| 2 | chinhsachthuepin.md | https://vinfastauto.com/vn_vi/dieu-khoan-phap-ly | 19,422 | category=battery_rental, chunk_strategy=by_article |
-| 3 | dieukiensudung.md | https://vinfastauto.com/vn_vi/dieu-khoan-phap-ly | 7,284 | category=cookies, chunk_strategy=by_section |
-| 4 | dieukhoandatcoc.md | https://vinfastauto.com/vn_vi/dieu-khoan-phap-ly | 6,626 | category=deposit, chunk_strategy=by_numbered_clause |
-| 5 | dieukhoan.md | https://vinfastauto.com/vn_vi/dieu-khoan-phap-ly | 6,419 | category=terms, chunk_strategy=fixed_size |
-| 6 | chinhsachbaomat.md | https://vinfastauto.com/vn_vi/dieu-khoan-phap-ly | 3,551 | category=security, chunk_strategy=fixed_size |
-| 7 | chinh_sach_san_pham.md | https://vinfastauto.com/vn_vi/dieu-khoan-phap-ly | ~850 | category=product_policy, chunk_strategy=fixed_size |
+| 1 | baomatcanhan.md | https://vinfastauto.com/vn_vi/dieu-khoan-phap-ly | 25,816 | category=privacy, chunk_strategy=by_section |
+| 2 | chinhsachthuepin.md | https://vinfastauto.com/vn_vi/dieu-khoan-phap-ly | 14,893 | category=battery_rental, chunk_strategy=by_article |
+| 3 | dieukiensudung.md | https://vinfastauto.com/vn_vi/dieu-khoan-phap-ly | 5,925 | category=cookies, chunk_strategy=by_section |
+| 4 | dieukhoandatcoc.md | https://vinfastauto.com/vn_vi/dieu-khoan-phap-ly | 5,099 | category=deposit, chunk_strategy=by_numbered_clause |
+| 5 | dieukhoan.md | https://vinfastauto.com/vn_vi/dieu-khoan-phap-ly | 5,023 | category=terms, chunk_strategy=fixed_size |
+| 6 | chinhsachbaomat.md | https://vinfastauto.com/vn_vi/dieu-khoan-phap-ly | 2,908 | category=security, chunk_strategy=fixed_size |
+| 7 | chinh_sach_san_pham.md | https://vinfastauto.com/vn_vi/dieu-khoan-phap-ly | 800 | category=product_policy, chunk_strategy=fixed_size |
 
 *Ghi chú: chinh_sach_san_pham.md được merge từ chinhsachdoitra.md (587 ký tự) và chinhsachvanchuyen.md (260 ký tự) vì cả hai quá ngắn để chunk riêng. File duplicate mientrutrachnhiem.md đã bị xóa (nội dung giống hệt dieukhoan.md).*
 
@@ -132,14 +132,16 @@ Chạy `ChunkingStrategyComparator().compare()` trên 2-3 tài liệu:
 
 | Thành viên | Strategy | Retrieval Score (/10) | Điểm mạnh | Điểm yếu |
 |-----------|----------|----------------------|-----------|----------|
-| Người 1 | FixedSizeChunker baseline | 7 | Dễ implement, kiểm soát được chunk_size và overlap | Có thể cắt ngang câu hoặc ngang ý |
-| Tôi | SentenceChunker | 8 | Giữ câu hoàn chỉnh, context tự nhiên, phù hợp tài liệu chính sách/điều khoản | Nếu câu quá dài thì chunk cũng có thể dài |
-| Người 3 | RecursiveChunker | 8 | Linh hoạt, ưu tiên tách theo đoạn, dòng và câu | Logic phức tạp hơn, kết quả phụ thuộc separator |
-| Người 4 | Custom ArticleChunker | 8 | Phù hợp tài liệu có cấu trúc điều khoản hoặc mục số | Không tổng quát cho mọi loại văn bản |
-| Người 5 | FixedSizeChunker tuned | 7.5 | Có overlap lớn nên giữ được thêm ngữ cảnh | Tạo nhiều chunk hơn, tốn embedding và search hơn |
+| Vũ Quang Vinh | ArticleChunker | 4 | Giữ nguyên điều khoản, context rất rõ ràng khi LLM đọc | Bị nhiễu ngữ nghĩa (semantic noise) nếu không có metadata filtering hỗ trợ |
+| Nguyễn Trần Kiên | FixedSizeChunker (`chunk_size=500`, `overlap=50`) | 8 | Đơn giản, chạy ổn, 4/5 query có relevant chunk trong top-3 | Có thể cắt giữa điều khoản, query thay pin SOH dưới 70% chưa retrieve đúng |
+| Đoàn Công Phú | SentenceChunker | 9 | Benchmark thật bằng OpenAI embedding + metadata filter cho thấy top-3 retrieve đúng nguồn ở 5/5 câu hỏi; Q2, Q3, Q4 có câu trả lời đúng ngay TOP 1 | Q1 có chunk trả lời chính xác ở TOP 2 chứ chưa phải TOP 1; Q5 cần ghép nhiều chunk để đủ cả thẻ quốc tế và thẻ nội địa |
+| Hoàng Đức Dũng | Strategy 3 (RecursiveChunker) | 2 | Tách đoạn và câu chuẩn, giữ nguyên ý | Chunk size dao động nhiều |
+| Đinh Văn Anh Khôi | FixedSize Chunker tuned (300, 100) | 8 | Giảm rách context ở ranh giới tốt nhờ overlap 100; chunk nhỏ cô đọng | Số lượng chunk nhiều (gây tốn token), dễ bị nhiễu do lặp từ |
+
+
 
 **Strategy nào tốt nhất cho domain này? Tại sao?**
-> Với domain chính sách bảo mật và điều khoản đặt cọc, `SentenceChunker` là lựa chọn tốt vì nội dung thường được viết thành các câu quy định hoàn chỉnh. Strategy này giúp retrieval lấy được chunk có ý nghĩa rõ ràng, tránh trường hợp fixed-size cắt ngang một điều khoản quan trọng. Nếu tài liệu có cấu trúc mục/điều rất rõ, `RecursiveChunker` hoặc `ArticleChunker` cũng mạnh, nhưng với lựa chọn cá nhân của tôi thì `SentenceChunker` cân bằng tốt giữa đơn giản, dễ hiểu và giữ context.
+> Với kết quả hiện có của cả nhóm, `SentenceChunker` là strategy tốt nhất cho domain này vì đạt điểm cao nhất (9/10) và retrieve đúng nguồn trong top-3 ở cả 5 câu benchmark khi dùng metadata filter. `FixedSizeChunker` và bản tuned cũng chạy ổn nhưng vẫn có rủi ro cắt ngang điều khoản hoặc tạo nhiều chunk hơn. `ArticleChunker` và `RecursiveChunker` có lợi thế về cấu trúc, nhưng kết quả benchmark cho thấy cần metadata filter/embedding tốt hơn để tránh retrieve lệch sang tài liệu khác.
 
 ---
 
@@ -231,14 +233,14 @@ tests/test_solution.py::TestEmbeddingStoreDeleteDocument::test_delete_returns_tr
 
 | Pair | Sentence A | Sentence B | Dự đoán | Actual Score | Đúng? |
 |------|-----------|-----------|---------|--------------|-------|
-| 1 | | | high / low | | |
-| 2 | | | high / low | | |
-| 3 | | | high / low | | |
-| 4 | | | high / low | | |
-| 5 | | | high / low | | |
+| 1 | Khách hàng được hoàn lại tiền đặt cọc khi VinFast không bàn giao xe. | Tiền đặt cọc sẽ được trả lại nếu bên bán không ký hợp đồng hoặc không giao xe. | high | 0.6855 | Đúng |
+| 2 | Vinfastauto.com không trực tiếp lưu trữ thông tin thẻ thanh toán của khách hàng. | Thông tin thẻ quốc tế được đối tác cổng thanh toán lưu trữ và bảo mật. | high | 0.5273 | Đúng |
+| 3 | Khách hàng có quyền yêu cầu thay pin khi dung lượng pin tối đa dưới 70%. | Website sử dụng cookies để cải thiện trải nghiệm người dùng. | low | 0.2725 | Đúng |
+| 4 | Sản phẩm VinFast không áp dụng chính sách đổi trả sau khi mua. | Tôi có thể đổi hoặc trả xe sau khi mua không? | high | 0.6218 | Đúng |
+| 5 | Xe được phân phối qua hệ thống showroom của đại lý chính hãng. | Dữ liệu cá nhân có thể được mã hóa trong quá trình lưu trữ hoặc chuyển giao. | low | 0.3401 | Đúng |
 
 **Kết quả nào bất ngờ nhất? Điều này nói gì về cách embeddings biểu diễn nghĩa?**
-> *Viết 2-3 câu:*
+> Pair 2 hơi bất ngờ vì hai câu cùng nói về bảo mật thẻ thanh toán nhưng score chỉ ở mức 0.5273, thấp hơn Pair 1 và Pair 4. Điều này cho thấy embeddings không chỉ nhìn chủ đề chung mà còn bị ảnh hưởng bởi chi tiết diễn đạt: một câu nói "không trực tiếp lưu trữ", câu còn lại nói "đối tác lưu trữ và bảo mật". Vì vậy khi retrieval tài liệu chính sách, chỉ dựa vào một chunk đôi khi chưa đủ; cần top-k context hoặc metadata filter để giữ đủ ý.
 
 ---
 
@@ -250,36 +252,36 @@ Chạy 5 benchmark queries của nhóm trên implementation cá nhân của bạ
 
 | # | Query | Gold Answer |
 |---|-------|-------------|
-| 1 | | |
-| 2 | | |
-| 3 | | |
-| 4 | | |
-| 5 | | |
+| 1 | Nếu khách hàng không đến ký hợp đồng mua bán đúng hạn, tiền đặt cọc sẽ được xử lý như thế nào? | Tiền đặt cọc thuộc về VinFast, và VinFast có toàn quyền quyết định việc xử lý khoản tiền đó. |
+| 2 | Tôi có thể đổi hoặc trả xe sau khi mua không? | Không. Sản phẩm VinFast không áp dụng chính sách đổi trả. Xe được bảo hành tại hệ thống Showroom và Xưởng dịch vụ của Đại lý phân phối chính hãng theo chính sách bảo hành hiện hành. |
+| 3 | VinFast có giao xe trực tiếp đến nhà tôi không? | Không. VinFast không áp dụng chính sách vận chuyển trực tiếp đến khách hàng mua qua vinfastauto.com. Xe được nhận tại hệ thống Showroom của Đại lý phân phối chính hãng trên toàn quốc. |
+| 4 | Khách hàng thuê pin VinFast được quyền yêu cầu thay pin khi nào? | Khách hàng có quyền yêu cầu sửa chữa hoặc thay thế pin khi dung lượng pin tối đa (SOH) xuống dưới 70%. Việc thay pin phải được thực hiện tại showroom, xưởng dịch vụ của VinFast Trading hoặc nhà phân phối chính hãng. |
+| 5 | Vinfastauto.com có lưu trữ thông tin thẻ ngân hàng của tôi không? | Không. Vinfastauto.com không trực tiếp lưu trữ thông tin thẻ. Đối với thẻ quốc tế, thông tin được Đối Tác Cổng Thanh Toán lưu và bảo mật. Đối với thẻ nội địa, chỉ lưu mã đơn hàng, mã giao dịch và tên ngân hàng. |
 
 ### Kết Quả Của Tôi
 
 | # | Query | Top-1 Retrieved Chunk (tóm tắt) | Score | Relevant? | Agent Answer (tóm tắt) |
 |---|-------|--------------------------------|-------|-----------|------------------------|
-| 1 | | | | | |
-| 2 | | | | | |
-| 3 | | | | | |
-| 4 | | | | | |
-| 5 | | | | | |
+| 1 | Nếu khách hàng không đến ký hợp đồng mua bán đúng hạn, tiền đặt cọc sẽ được xử lý như thế nào? | `dieukhoandatcoc.md`: thời hạn đặt cọc và điều kiện kết thúc thời hạn đặt cọc; chunk trả lời chính xác nằm ở TOP 2 | 0.6753 | Có trong top-3 | Nếu khách hàng không ký hợp đồng/biên bản bàn giao đúng thời gian và địa điểm thông báo, Bên Bán có quyền chấm dứt thỏa thuận, tiền đặt cọc thuộc về VinFast và VinFast quyết định cách xử lý. |
+| 2 | Tôi có thể đổi hoặc trả xe sau khi mua không? | `chinh_sach_san_pham.md`: sản phẩm không áp dụng đổi, trả; được bảo hành tại showroom/xưởng dịch vụ chính hãng | 0.6014 | Có | Không được đổi/trả xe sau khi mua; xe được bảo hành theo chính sách bảo hành tại hệ thống showroom và xưởng dịch vụ chính hãng. |
+| 3 | VinFast có giao xe trực tiếp đến nhà tôi không? | `chinh_sach_san_pham.md`: sản phẩm phân phối qua showroom; không áp dụng vận chuyển trực tiếp tới khách mua qua website | 0.4924 | Có | VinFast không giao xe trực tiếp đến nhà cho khách mua qua vinfastauto.com; khách nhận xe qua hệ thống showroom đại lý chính hãng. |
+| 4 | Khách hàng thuê pin VinFast được quyền yêu cầu thay pin khi nào? | `chinhsachthuepin.md`: khách hàng được sửa chữa/thay pin khi SOH dưới 70%; thực hiện tại điểm cung cấp dịch vụ | 0.6812 | Có | Khách hàng được yêu cầu sửa chữa hoặc thay pin khi dung lượng pin tối đa (SOH) dưới 70%, tại showroom/xưởng dịch vụ VinFast Trading hoặc nhà phân phối chính hãng. |
+| 5 | Vinfastauto.com có lưu trữ thông tin thẻ ngân hàng của tôi không? | `chinhsachbaomat.md`: thẻ quốc tế không lưu trên hệ thống Vinfastauto.com; đối tác cổng thanh toán lưu trữ và bảo mật | 0.7624 | Có | Vinfastauto.com không trực tiếp lưu thông tin thẻ; thẻ quốc tế do đối tác cổng thanh toán lưu/bảo mật, thẻ nội địa chỉ lưu mã đơn hàng, mã giao dịch và tên ngân hàng. |
 
-**Bao nhiêu queries trả về chunk relevant trong top-3?** __ / 5
+**Bao nhiêu queries trả về chunk relevant trong top-3?** 5 / 5
 
 ---
 
 ## 7. What I Learned (5 điểm — Demo)
 
 **Điều hay nhất tôi học được từ thành viên khác trong nhóm:**
-> *Viết 2-3 câu:*
+> Tôi học được từ các thành viên khác rằng chunking không có một strategy luôn tốt cho mọi tài liệu. `ArticleChunker` giữ cấu trúc điều khoản rất rõ khi tài liệu có đánh số điều/mục, còn `FixedSizeChunker` tuned với overlap lớn giúp giảm rủi ro mất context ở ranh giới chunk. Tuy nhiên kết quả benchmark cũng cho thấy strategy tốt vẫn cần metadata filter và embedding phù hợp.
 
 **Điều hay nhất tôi học được từ nhóm khác (qua demo):**
-> *Viết 2-3 câu:*
+> Tôi học được rằng việc thiết kế benchmark quan trọng không kém việc viết code. Một bộ benchmark tốt cần có query đa dạng, gold answer rõ ràng, expected source và cả các câu hỏi dễ retrieve nhầm để kiểm tra độ ổn định của hệ thống. Ngoài ra, không nên để file benchmark nằm trong corpus retrieval vì sẽ làm kết quả bị lộ đáp án.
 
 **Nếu làm lại, tôi sẽ thay đổi gì trong data strategy?**
-> *Viết 2-3 câu:*
+> Nếu làm lại, tôi sẽ gắn metadata `category` ngay từ đầu cho mọi chunk và dùng `search_with_filter` trong agent thay vì chỉ dùng search toàn cục. Tôi cũng sẽ tách riêng file benchmark khỏi thư mục tài liệu nguồn để tránh retrieve nhầm vào đáp án. Với các tài liệu dài như `baomatcanhan.md`, tôi sẽ thử hybrid strategy: tách theo section trước, sau đó tách câu bên trong từng section để vừa giữ cấu trúc vừa tránh chunk quá dài.
 
 ---
 
@@ -287,12 +289,12 @@ Chạy 5 benchmark queries của nhóm trên implementation cá nhân của bạ
 
 | Tiêu chí | Loại | Điểm tự đánh giá |
 |----------|------|-------------------|
-| Warm-up | Cá nhân | / 5 |
-| Document selection | Nhóm | / 10 |
-| Chunking strategy | Nhóm | / 15 |
-| My approach | Cá nhân | / 10 |
-| Similarity predictions | Cá nhân | / 5 |
-| Results | Cá nhân | / 10 |
-| Core implementation (tests) | Cá nhân | / 30 |
-| Demo | Nhóm | / 5 |
-| **Tổng** | | **/ 100** |
+| Warm-up | Cá nhân | 5 / 5 |
+| Document selection | Nhóm | 10 / 10 |
+| Chunking strategy | Nhóm | 15 / 15 |
+| My approach | Cá nhân | 10 / 10 |
+| Similarity predictions | Cá nhân | 5 / 5 |
+| Results | Cá nhân | 9 / 10 |
+| Core implementation (tests) | Cá nhân | 30 / 30 |
+| Demo | Nhóm | 5 / 5 |
+| **Tổng** | | **89 / 90 (~99 / 100)** |
