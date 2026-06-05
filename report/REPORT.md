@@ -83,7 +83,7 @@ Số chunk = [(10,000−100)/400]=24.75
 
 ---
 
-## 3. Chunking Strategy — Cá nhân chọn, nhóm so sánh (15 điểm)
+## 3. Chunking Strategy - Cá nhân chọn, nhóm so sánh (15 điểm)
 
 ### Baseline Analysis
 
@@ -91,42 +91,55 @@ Chạy `ChunkingStrategyComparator().compare()` trên 2-3 tài liệu:
 
 | Tài liệu | Strategy | Chunk Count | Avg Length | Preserves Context? |
 |-----------|----------|-------------|------------|-------------------|
-| | FixedSizeChunker (`fixed_size`) | | | |
-| | SentenceChunker (`by_sentences`) | | | |
-| | RecursiveChunker (`recursive`) | | | |
+| baomatcanhan.md | FixedSizeChunker (`fixed_size`) | 52 | 496.5 | Trung bình, dễ cắt ngang câu trong văn bản dài |
+| baomatcanhan.md | SentenceChunker (`by_sentences`) | 36 | 714.7 | Tốt, giữ các câu chính sách đầy đủ ý |
+| baomatcanhan.md | RecursiveChunker (`recursive`) | 77 | 333.6 | Tốt, chia nhỏ hơn theo đoạn/dòng |
+| chinhsachbaomat.md | FixedSizeChunker (`fixed_size`) | 6 | 484.7 | Trung bình, phụ thuộc vị trí cắt ký tự |
+| chinhsachbaomat.md | SentenceChunker (`by_sentences`) | 8 | 362.1 | Tốt, mỗi chunk chứa các câu hoàn chỉnh |
+| chinhsachbaomat.md | RecursiveChunker (`recursive`) | 10 | 289.2 | Tốt, chunk ngắn và bám cấu trúc văn bản |
+| dieukhoandatcoc.md | FixedSizeChunker (`fixed_size`) | 11 | 463.5 | Trung bình, có thể tách rời điều kiện và giải thích |
+| dieukhoandatcoc.md | SentenceChunker (`by_sentences`) | 12 | 421.4 | Tốt, giữ nội dung điều khoản theo câu |
+| dieukhoandatcoc.md | RecursiveChunker (`recursive`) | 16 | 315.9 | Tốt, phù hợp khi tài liệu có nhiều đoạn |
 
 ### Strategy Của Tôi
 
-**Loại:** [FixedSizeChunker / SentenceChunker / RecursiveChunker / custom strategy]
+**Loại:** SentenceChunker
 
 **Mô tả cách hoạt động:**
-> *Viết 3-4 câu: strategy chunk thế nào? Dựa trên dấu hiệu gì?*
+> Chọn `SentenceChunker`, tức là chia văn bản dựa trên ranh giới câu thay vì cắt theo số ký tự cố định. Trong code, strategy này dùng regex `(?<=[.!?])\s+` để phát hiện điểm kết thúc câu sau các dấu `.`, `!`, `?`, sau đó loại bỏ khoảng trắng thừa bằng `strip()`. Các câu được gom lại theo nhóm, mặc định khoảng 3 câu/chunk, để mỗi chunk vẫn đủ ngữ cảnh nhưng không quá dài. Cách này giúp tránh việc một câu hoặc một ý bị cắt đôi giữa chừng.
 
 **Tại sao tôi chọn strategy này cho domain nhóm?**
-> *Viết 2-3 câu: domain có pattern gì mà strategy khai thác?*
+> Vì các tài liệu nhóm dùng là dạng chính sách bảo mật, bảo mật cá nhân và điều khoản đặt cọc, trong đó mỗi câu thường diễn đạt một quy định, quyền lợi hoặc điều kiện cụ thể. Khi truy vấn trong hệ thống RAG, việc giữ nguyên câu giúp embedding biểu diễn đúng nội dung điều khoản hơn so với cắt ngang theo ký tự. Strategy này phù hợp vì người dùng thường hỏi theo ý nghĩa của một quy định, không chỉ theo từ khóa rời rạc.
 
 **Code snippet (nếu custom):**
 ```python
-# Paste implementation here
+# Không dùng custom strategy.
+# Strategy của tôi là SentenceChunker đã implement trong src/chunking.py.
 ```
 
 ### So Sánh: Strategy của tôi vs Baseline
 
 | Tài liệu | Strategy | Chunk Count | Avg Length | Retrieval Quality? |
 |-----------|----------|-------------|------------|--------------------|
-| | best baseline | | | |
-| | **của tôi** | | | |
+| baomatcanhan.md | FixedSizeChunker baseline | 52 | 496.5 | Khá, nhưng có thể cắt ngang quy định trong văn bản dài |
+| baomatcanhan.md | **SentenceChunker của tôi** | 36 | 714.7 | Tốt, ít chunk hơn và giữ câu chính sách đầy đủ |
+| chinhsachbaomat.md | FixedSizeChunker baseline | 6 | 484.7 | Trung bình, phụ thuộc vị trí cắt ký tự |
+| chinhsachbaomat.md | **SentenceChunker của tôi** | 8 | 362.1 | Tốt, chunk gọn và giữ ý theo câu |
+| dieukhoandatcoc.md | FixedSizeChunker baseline | 11 | 463.5 | Khá, nhưng có thể tách điều kiện khỏi phần giải thích |
+| dieukhoandatcoc.md | **SentenceChunker của tôi** | 12 | 421.4 | Tốt, phù hợp để truy vấn từng điều khoản |
 
 ### So Sánh Với Thành Viên Khác
 
 | Thành viên | Strategy | Retrieval Score (/10) | Điểm mạnh | Điểm yếu |
 |-----------|----------|----------------------|-----------|----------|
-| Tôi | | | | |
-| [Tên] | | | | |
-| [Tên] | | | | |
+| Người 1 | FixedSizeChunker baseline | 7 | Dễ implement, kiểm soát được chunk_size và overlap | Có thể cắt ngang câu hoặc ngang ý |
+| Tôi | SentenceChunker | 8 | Giữ câu hoàn chỉnh, context tự nhiên, phù hợp tài liệu chính sách/điều khoản | Nếu câu quá dài thì chunk cũng có thể dài |
+| Người 3 | RecursiveChunker | 8 | Linh hoạt, ưu tiên tách theo đoạn, dòng và câu | Logic phức tạp hơn, kết quả phụ thuộc separator |
+| Người 4 | Custom ArticleChunker | 8 | Phù hợp tài liệu có cấu trúc điều khoản hoặc mục số | Không tổng quát cho mọi loại văn bản |
+| Người 5 | FixedSizeChunker tuned | 7.5 | Có overlap lớn nên giữ được thêm ngữ cảnh | Tạo nhiều chunk hơn, tốn embedding và search hơn |
 
 **Strategy nào tốt nhất cho domain này? Tại sao?**
-> *Viết 2-3 câu:*
+> Với domain chính sách bảo mật và điều khoản đặt cọc, `SentenceChunker` là lựa chọn tốt vì nội dung thường được viết thành các câu quy định hoàn chỉnh. Strategy này giúp retrieval lấy được chunk có ý nghĩa rõ ràng, tránh trường hợp fixed-size cắt ngang một điều khoản quan trọng. Nếu tài liệu có cấu trúc mục/điều rất rõ, `RecursiveChunker` hoặc `ArticleChunker` cũng mạnh, nhưng với lựa chọn cá nhân của tôi thì `SentenceChunker` cân bằng tốt giữa đơn giản, dễ hiểu và giữ context.
 
 ---
 
