@@ -1,8 +1,9 @@
 # Báo Cáo Lab 7: Embedding & Vector Store
 
-**Họ tên:** [Tên sinh viên]
+**Họ tên:** Đoàn Công Phú
+
 **Nhóm:** [Tên nhóm]
-**Ngày:** [Ngày nộp]
+**Ngày:** 05/06/2026
 
 ---
 
@@ -11,29 +12,40 @@
 ### Cosine Similarity (Ex 1.1)
 
 **High cosine similarity nghĩa là gì?**
-> *Viết 1-2 câu:*
+> *High cosine similarity là một chỉ số toán học dùng để đo lường mức độ giống nhau về ý nghĩa giữa hai đoạn văn bản, hình ảnh hoặc dữ liệu bất kỳ đã được chuyển đổi thành vector High similarity nghĩa là hai văn bản có ý nghĩa gần nhau.*
 
 **Ví dụ HIGH similarity:**
-- Sentence A:
-- Sentence B:
-- Tại sao tương đồng:
+- Sentence A: Tôi muốn đặt vé máy bay đi Hà Nội
+- Sentence B: Làm sao để mua vé bay tới Hà Nội?
+- Tại sao tương đồng: Hai câu dùng từ khác nhau, nhưng ý nghĩa gần giống nhau → cosine similarity cao.
 
 **Ví dụ LOW similarity:**
-- Sentence A:
-- Sentence B:
-- Tại sao khác:
+- Sentence A: Tôi muốn đặt xe bus đi Hải Phòng
+- Sentence B: Cách làm bánh đậu xanh tại nhà?
+- Tại sao khác: Hai câu nói về hai chủ đề khác nhau → cosine similarity thấp.
 
 **Tại sao cosine similarity được ưu tiên hơn Euclidean distance cho text embeddings?**
-> *Viết 1-2 câu:*
+> *Cosine similarity tốt hơn Euclidean distance cho text embedding vì nó so sánh hướng giữa hai vector, do đó bỏ qua độ dài/scale của văn bản và phản ánh tốt hơn tương đồng ngữ nghĩa trong không gian nhiều chiều; Euclidean phù hợp khi bạn cần đo khoảng cách tuyệt đối*
 
 ### Chunking Math (Ex 1.2)
 
 **Document 10,000 ký tự, chunk_size=500, overlap=50. Bao nhiêu chunks?**
 > *Trình bày phép tính:*
-> *Đáp án:*
+```
+step = chunk_size - overlap = 500 - 50 = 450
+N = ceil((10000 - 500) / 450) + 1
+N = ceil(9500 / 450) + 1
+N = ceil(21.11) + 1
+N = 22 + 1
+N = 23 chunks
+```
+> *Đáp án: 23 chunks*
 
 **Nếu overlap tăng lên 100, chunk count thay đổi thế nào? Tại sao muốn overlap nhiều hơn?**
-> *Viết 1-2 câu:*
+```
+Số chunk = [(10,000−100)/400]=24.75
+```
+> *Overlap lớn hơn → bước nhảy nhỏ hơn → số chunk nhiều hơn.Overlap giúp chunk không bị mất nghĩa ở đoạn giao nhau,overlap quá lớn sẽ tạo nhiều chunk hơn, tốn chi phí embedding và truy xuất hơn.*
 
 ---
 
