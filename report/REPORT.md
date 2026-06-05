@@ -297,4 +297,4 @@ Chạy 5 benchmark queries của nhóm trên implementation cá nhân của bạ
 | Results | Cá nhân | 9 / 10 |
 | Core implementation (tests) | Cá nhân | 30 / 30 |
 | Demo | Nhóm | 5 / 5 |
-| **Tổng** | | **89 / 90 (~99 / 100)** |
+| **Tổng** | | **89 / 90** |
